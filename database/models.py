@@ -10,3 +10,9 @@ class User(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+
+class Search(models.Model):
+
+    movie_name = fields.CharField(max_length=255)
+    user = fields.ForeignKeyField("models.User", on_delete=fields.SET_NULL, null=True, blank=True)
