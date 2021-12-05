@@ -1,4 +1,3 @@
-from aiogram import types
 from aiohttp import ClientSession
 from decouple import config
 
