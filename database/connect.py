@@ -2,8 +2,6 @@ from tortoise import Tortoise, run_async
 
 import config
 
-print(config.DATABASE_URL)
-
 
 async def init():
     await Tortoise.init(
