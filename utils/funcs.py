@@ -1,13 +1,15 @@
-from aiogram.types import message
+from aiogram import types
 from aiohttp import ClientSession
 from decouple import config
 
-from database.models import User
+from database.models import Search, User
+from database.decorators import connect_db
 
 
 API_MOVIE_DATA_URL = config("API_MOVIE_DATA_URL")
 
 
+@connect_db
 async def create_or_get_user(user) -> User:
 
     users = await User.filter(tg_id=user.id)
@@ -19,6 +21,16 @@ async def create_or_get_user(user) -> User:
         user = new_user
 
     return user
+
+
+async def create_search(name: str, tg_id: str) -> None:
+
+    users = await User.filter(tg_id=tg_id)
+    if users:
+        user = users[0]
+        await Search.create(movie_name=name, user=user)
+    
+    return
 
 
 def format_dict(movie_dict: dict) -> str:
@@ -44,7 +56,7 @@ def format_dict(movie_dict: dict) -> str:
     return message
 
 
-async def search_movie(movie_name) -> str:
+async def search_movie(movie_name: str, user_id: str) -> str:
 
     request_url = API_MOVIE_DATA_URL.format(movie_name)
 
@@ -54,6 +66,7 @@ async def search_movie(movie_name) -> str:
             movie_dict = await resp.json()
             
             if not movie_dict.get('Error'):
+                await create_search(movie_dict['Title'], user_id)
                 return format_dict(movie_dict)
             else:
-                return 'Not Found :(\n Are you sure you typed right?'
+                return "Not Found :(\n Are you sure you typed right?"

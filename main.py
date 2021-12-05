@@ -51,9 +51,10 @@ async def search(message: types.Message):
 @dp.message_handler(state=SearchState.movie_name)
 async def process_movie_name(message: types.Message, state: FSMContext):
     
-    result = await search_movie(message.text)
+    user_id = types.User.get_current().id
+    result = await search_movie(message.text, str(user_id))
     await state.finish()
-    await bot.send_message(chat_id=types.User.get_current().id, text=result, parse_mode=ParseMode.HTML)
+    await bot.send_message(chat_id=user_id, text=result, parse_mode=ParseMode.HTML)
 
 
 if __name__ == "__main__":
