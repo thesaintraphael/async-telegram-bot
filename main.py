@@ -1,5 +1,4 @@
 import logging
-import os
 
 from aiogram import Bot, Dispatcher, executor, types
 from decouple import config
