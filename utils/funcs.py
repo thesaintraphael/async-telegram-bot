@@ -1,11 +1,13 @@
 from aiohttp import ClientSession
 from decouple import config
+from bs4 import BeautifulSoup
 
 from database.models import Search, User
 from database.decorators import connect_db
 
 
 API_MOVIE_DATA_URL = config("API_MOVIE_DATA_URL")
+MOVIE_MAP_URL = config("MOVIE_MAP_URL")
 
 
 @connect_db
@@ -68,4 +70,21 @@ async def search_movie(movie_name: str, user_id: str) -> str:
                 await create_search(movie_dict['Title'], user_id)
                 return format_dict(movie_dict)
             else:
-                return "Not Found :(\n Are you sure you typed right?"
+                return "Not Found :(\nAre you sure you movie name is correct?"
+
+
+async def get_suggestions(movie_name: str) -> str:
+
+    async with ClientSession() as session:
+        async with session.get(MOVIE_MAP_URL.format(movie_name)) as response:
+            html_text = await response.text()
+            soup = BeautifulSoup(html_text, 'html.parser')
+            titles = ''
+            a_links = soup.find_all('a')
+
+            for link in a_links[3:13]:
+                titles += link.text + '\n'
+            
+            if not titles:
+                titles = "Not Found :(\nAre you sure you sure movie name is correct?"
+            return titles

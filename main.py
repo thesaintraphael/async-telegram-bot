@@ -7,8 +7,8 @@ from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 from decouple import config
 
-from utils.funcs import create_or_get_user, search_movie
-from utils.states import SearchState
+from utils.funcs import create_or_get_user, get_suggestions, search_movie
+from utils.states import SearchState, SuggestState
 from database.decorators import connect_db
 
 
@@ -19,6 +19,9 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=API_TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
+
+
+# HANDLE COMMANDS
 
 
 @dp.message_handler(commands=["start"])
@@ -46,6 +49,24 @@ async def search(message: types.Message):
 
     await SearchState.movie_name.set()
     await message.reply("Enter the movie name you want to explore.. \n Type cancel to cancel")
+
+
+@dp.message_handler(commands=['suggest'])
+async def suggest(message: types.Message):
+
+    await SuggestState.movie_name.set()
+    await message.reply("Enter a movie name to get sugesstions..\nType cancel to cancel")
+
+
+# PROCESS STATES
+
+
+@dp.message_handler(state=SuggestState)
+async def process_suggest_movie_name(message: types.Message, state: FSMContext):
+
+    result = await get_suggestions(message.text)
+    await state.finish()
+    await message.reply(result)
 
 
 @dp.message_handler(state=SearchState.movie_name)
