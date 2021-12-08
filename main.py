@@ -38,24 +38,28 @@ async def cancel_handler(message: types.Message, state: FSMContext):
     current_state = await state.get_state()
     if current_state is None:
         return
-    
+
     logging.info("Cancelling state %r", current_state)
     await state.finish()
     await message.reply("Cancelled", reply_markup=types.ReplyKeyboardRemove())
 
 
-@dp.message_handler(commands=['search'])
+@dp.message_handler(commands=["search"])
 async def search(message: types.Message):
 
     await SearchState.movie_name.set()
-    await message.reply("Enter the movie name you want to explore.. \n Type cancel to cancel")
+    await message.reply(
+        "Enter the movie name you want to explore.. \n Type cancel to cancel"
+    )
 
 
-@dp.message_handler(commands=['suggest'])
+@dp.message_handler(commands=["suggest"])
 async def suggest(message: types.Message):
 
     await SuggestState.movie_name.set()
-    await message.reply("Enter a movie name to get sugesstions..\nType cancel to cancel")
+    await message.reply(
+        "Enter a movie name to get sugesstions..\nType cancel to cancel"
+    )
 
 
 # PROCESS STATES
@@ -71,7 +75,7 @@ async def process_suggest_movie_name(message: types.Message, state: FSMContext):
 
 @dp.message_handler(state=SearchState.movie_name)
 async def process_movie_name(message: types.Message, state: FSMContext):
-    
+
     user_id = types.User.get_current().id
     result = await search_movie(message.text, str(user_id))
     await state.finish()

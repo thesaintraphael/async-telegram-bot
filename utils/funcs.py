@@ -1,5 +1,5 @@
 import asyncio
-from typing import Dict, List
+from typing import List
 from aiohttp import ClientSession
 from decouple import config
 from bs4 import BeautifulSoup
@@ -32,7 +32,7 @@ async def create_search(name: str, tg_id: str) -> None:
     if users:
         user = users[0]
         await Search.create(movie_name=name, user=user)
-    
+
     return
 
 
@@ -61,7 +61,7 @@ def format_dict(movie_dict: dict) -> str:
 
 def convert_to_str(suggestions: List[str]) -> str:
 
-    suggestions_str = ''
+    suggestions_str = ""
     for suggestion in suggestions:
         suggestions_str += suggestion
 
@@ -74,11 +74,11 @@ async def search_movie(movie_name: str, user_id: str) -> str:
 
     async with ClientSession() as session:
         async with session.get(request_url) as resp:
-            
+
             movie_dict = await resp.json()
-            
-            if not movie_dict.get('Error'):
-                await create_search(movie_dict['Title'], user_id)
+
+            if not movie_dict.get("Error"):
+                await create_search(movie_dict["Title"], user_id)
                 return format_dict(movie_dict)
             else:
                 return "Not Found :(\nAre you sure you movie name is correct?"
@@ -94,24 +94,23 @@ async def get_movie_data(movie_name: str) -> str:
             return f"{movie_dict['Title']} - {movie_dict['imdbRating']}\n"
 
 
-
 async def get_suggestions(movie_name: str) -> str:
 
     async with ClientSession() as session:
         async with session.get(MOVIE_MAP_URL.format(movie_name)) as response:
             html_text = await response.text()
-            soup = BeautifulSoup(html_text, 'html.parser')
+            soup = BeautifulSoup(html_text, "html.parser")
             tasks = []
-            a_links = soup.find_all('a')
+            a_links = soup.find_all("a")
 
             for link in a_links[3:13]:
-                tasks.append(asyncio.create_task(
-                    get_movie_data(link.text)
-                ))
+                tasks.append(asyncio.create_task(get_movie_data(link.text)))
 
             suggestions = await asyncio.gather(*tasks)
             suggestions = convert_to_str(suggestions)
-            
+
             if not tasks:
-                suggestions = "Not Found :(\nAre you sure you sure movie name is correct?"
+                suggestions = (
+                    "Not Found :(\nAre you sure you sure movie name is correct?"
+                )
             return suggestions
