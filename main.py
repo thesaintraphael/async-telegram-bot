@@ -5,6 +5,8 @@ from aiogram.types import ParseMode
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
+from aiogram.utils.emoji import emojize
+from aiogram.utils.markdown import text
 from decouple import config
 
 from utils.funcs import create_or_get_user, get_suggestions, search_movie, get_user
@@ -90,6 +92,17 @@ async def unsubscribe(message: types.Message):
         reply_text = "You are successfully unsubscribed"
 
     return await message.reply(reply_text)
+
+
+@dp.message_handler()
+async def echo(message: types.Message):
+
+    reply_text = "Sorry,\nI dont understand this command yet :disappointed_relieved:"
+    reply_text = emojize(text(reply_text))
+    return await bot.send_message(
+        message.chat.id, reply_text, parse_mode=ParseMode.MARKDOWN
+    )
+
 
 # PROCESS STATES
 
