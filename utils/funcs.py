@@ -26,6 +26,12 @@ async def create_or_get_user(user) -> User:
     return user
 
 
+@connect_db
+async def get_user(tg_id) -> User:
+
+    return await User.filter(tg_id=tg_id).first()
+
+
 async def create_search(name: str, tg_id: str) -> None:
 
     users = await User.filter(tg_id=tg_id)

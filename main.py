@@ -7,7 +7,7 @@ from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 from decouple import config
 
-from utils.funcs import create_or_get_user, get_suggestions, search_movie
+from utils.funcs import create_or_get_user, get_suggestions, search_movie, get_user
 from utils.states import SearchState, SuggestState
 from database.decorators import connect_db
 
@@ -61,6 +61,35 @@ async def suggest(message: types.Message):
         "Enter a movie name to get sugesstions..\nType cancel to cancel"
     )
 
+
+@dp.message_handler(commands=['subscribe'])
+async def subscribe(message: types.Message):
+
+    tg_id = types.User.get_current().id
+    user = await get_user(tg_id)
+    if user.subscribed:
+       reply_text = "You are already subscribed"
+    else:
+        user.subscribed = True
+        await user.save()
+        reply_text = "You are successfully subscribed"
+    
+    return await message.reply(reply_text)
+
+
+@dp.message_handler(commands=['unsubscribe'])
+async def unsubscribe(message: types.Message):
+
+    tg_id = types.User.get_current().id
+    user = await get_user(tg_id)
+    if not user.subscribed:
+        reply_text = "You are not subscribed currently"
+    else:
+        user.subscribed = False
+        await user.save()
+        reply_text = "You are successfully unsubscribed"
+
+    return await message.reply(reply_text)
 
 # PROCESS STATES
 
