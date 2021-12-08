@@ -1,3 +1,5 @@
+import asyncio
+from typing import Dict, List
 from aiohttp import ClientSession
 from decouple import config
 from bs4 import BeautifulSoup
@@ -57,6 +59,15 @@ def format_dict(movie_dict: dict) -> str:
     return message
 
 
+def convert_to_str(suggestions: List[str]) -> str:
+
+    suggestions_str = ''
+    for suggestion in suggestions:
+        suggestions_str += suggestion
+
+    return suggestions_str
+
+
 async def search_movie(movie_name: str, user_id: str) -> str:
 
     request_url = API_MOVIE_DATA_URL.format(movie_name)
@@ -73,18 +84,34 @@ async def search_movie(movie_name: str, user_id: str) -> str:
                 return "Not Found :(\nAre you sure you movie name is correct?"
 
 
+async def get_movie_data(movie_name: str) -> str:
+
+    request_url = API_MOVIE_DATA_URL.format(movie_name)
+
+    async with ClientSession() as session:
+        async with session.get(request_url) as resp:
+            movie_dict = await resp.json()
+            return f"{movie_dict['Title']} - {movie_dict['imdbRating']}\n"
+
+
+
 async def get_suggestions(movie_name: str) -> str:
 
     async with ClientSession() as session:
         async with session.get(MOVIE_MAP_URL.format(movie_name)) as response:
             html_text = await response.text()
             soup = BeautifulSoup(html_text, 'html.parser')
-            titles = ''
+            tasks = []
             a_links = soup.find_all('a')
 
             for link in a_links[3:13]:
-                titles += link.text + '\n'
+                tasks.append(asyncio.create_task(
+                    get_movie_data(link.text)
+                ))
+
+            suggestions = await asyncio.gather(*tasks)
+            suggestions = convert_to_str(suggestions)
             
-            if not titles:
-                titles = "Not Found :(\nAre you sure you sure movie name is correct?"
-            return titles
+            if not tasks:
+                suggestions = "Not Found :(\nAre you sure you sure movie name is correct?"
+            return suggestions
