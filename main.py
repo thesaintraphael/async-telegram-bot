@@ -13,10 +13,18 @@ from utils.funcs import create_or_get_user, get_suggestions, search_movie, get_u
 from utils.states import SearchState, SuggestState
 from database.decorators import connect_db
 
+from datetime import datetime
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
+
+async def tick():
+    print("Tick! The time is: %s" % datetime.now())
+
 
 API_TOKEN = config("API_TOKEN")
 
 logging.basicConfig(level=logging.INFO)
+
 
 bot = Bot(token=API_TOKEN)
 storage = MemoryStorage()
@@ -125,4 +133,9 @@ async def process_movie_name(message: types.Message, state: FSMContext):
 
 
 if __name__ == "__main__":
+
+    scheduler = AsyncIOScheduler({'apscheduler.timezone': 'Europe/London'})
+    scheduler.add_job(tick, 'cron', hour='11', minute='3', day='*')
+
+    scheduler.start()
     executor.start_polling(dp, skip_updates=True)
