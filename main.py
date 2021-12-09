@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 from aiogram import Bot, Dispatcher, executor, types
@@ -9,19 +10,16 @@ from aiogram.utils.emoji import emojize
 from aiogram.utils.markdown import text
 from decouple import config
 
-from utils.funcs import create_or_get_user, get_suggestions, search_movie, get_user
+from utils.funcs import create_or_get_user, get_suggestions, search_movie, get_user, get_movie_names
 from utils.states import SearchState, SuggestState
 from database.decorators import connect_db
 
-from datetime import datetime
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 
-async def tick():
-    print("Tick! The time is: %s" % datetime.now())
-
-
 API_TOKEN = config("API_TOKEN")
+MOVIE_LIST = []
+
 
 logging.basicConfig(level=logging.INFO)
 
@@ -132,10 +130,21 @@ async def process_movie_name(message: types.Message, state: FSMContext):
     await bot.send_message(chat_id=user_id, text=result, parse_mode=ParseMode.HTML)
 
 
+#  INTERNAL COMMANDS
+
+
+async def update_movie_names():
+
+    global MOVIE_LIST   
+    MOVIE_LIST = await get_movie_names()
+
+
 if __name__ == "__main__":
 
+    asyncio.get_event_loop().run_until_complete(update_movie_names())
+    
     scheduler = AsyncIOScheduler({'apscheduler.timezone': 'Europe/London'})
-    scheduler.add_job(tick, 'cron', hour='11', minute='3', day='*')
+    scheduler.add_job(update_movie_names, 'cron', day='1st mon')   
 
     scheduler.start()
     executor.start_polling(dp, skip_updates=True)

@@ -120,3 +120,19 @@ async def get_suggestions(movie_name: str) -> str:
                     "Not Found :(\nAre you sure you sure movie name is correct?"
                 )
             return suggestions
+
+
+async def get_movie_names() -> List:
+
+    url = 'http://www.imdb.com/chart/top'
+
+    async with ClientSession() as session:
+        async with session.get(url) as resp:
+            resp_text = await resp.text()
+            soup = BeautifulSoup(resp_text, 'html.parser')
+
+            movie_tags = soup.select('td.titleColumn a')
+            titles = [tag.text for tag in movie_tags]
+            titles = list(set(titles))  # remove duplicates
+
+            return titles
