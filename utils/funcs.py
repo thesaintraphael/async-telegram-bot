@@ -14,6 +14,9 @@ API_MOVIE_DATA_URL = config("API_MOVIE_DATA_URL")
 MOVIE_MAP_URL = config("MOVIE_MAP_URL")
 
 
+#   CRUD OPERATINOS
+
+
 @connect_db
 async def create_or_get_user(user) -> User:
 
@@ -42,6 +45,14 @@ async def create_search(name: str, tg_id: str) -> None:
         await Search.create(movie_name=name, user=user)
 
     return
+
+
+async def  get_subscribed_users_list() -> List:
+
+    return await User.filter(subscribed=True)
+
+
+# MOVIE DATA 
 
 
 def format_dict(movie_dict: dict) -> str:

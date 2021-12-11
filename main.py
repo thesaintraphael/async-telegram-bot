@@ -10,7 +10,15 @@ from aiogram.utils.emoji import emojize
 from aiogram.utils.markdown import text
 from decouple import config
 
-from utils.funcs import create_or_get_user, get_suggestions, search_movie, get_user, get_movie_names, get_random_movie
+from utils.funcs import (
+    create_or_get_user,
+    get_suggestions,
+    search_movie,
+    get_user,
+    get_movie_names,
+    get_random_movie,
+    get_subscribed_users_list,
+)
 from utils.states import SearchState, SuggestState
 from database.decorators import connect_db
 
@@ -137,6 +145,24 @@ async def process_movie_name(message: types.Message, state: FSMContext):
     await bot.send_message(chat_id=user_id, text=result, parse_mode=ParseMode.HTML)
 
 
+# PERIODIC TASKS (EXTERNAL)
+
+
+@connect_db
+async def daily_suggestion():
+    users = await get_subscribed_users_list()
+    movie_data = await get_random_movie(MOVIE_LIST)
+
+    for user in users:
+        try:
+            await bot.send_message(
+                chat_id=user.tg_id, text=movie_data, parse_mode=ParseMode.HTML
+            )
+        except Exception as e:
+            logging.error("Cannot send message:  %r", e)
+            continue
+
+
 #  INTERNAL COMMANDS
 
 
@@ -151,7 +177,8 @@ if __name__ == "__main__":
     asyncio.get_event_loop().run_until_complete(update_movie_names())
     
     scheduler = AsyncIOScheduler({'apscheduler.timezone': 'Europe/London'})
-    scheduler.add_job(update_movie_names, 'cron', day='1st mon')   
+    scheduler.add_job(update_movie_names, 'cron', day='1st mon')
+    scheduler.add_job(daily_suggestion, 'cron', hour='17', minute='20')
 
     scheduler.start()
     executor.start_polling(dp, skip_updates=True)
