@@ -1,4 +1,6 @@
 import asyncio
+import random
+
 from typing import List
 from aiohttp import ClientSession
 from decouple import config
@@ -74,7 +76,7 @@ def convert_to_str(suggestions: List[str]) -> str:
     return suggestions_str
 
 
-async def search_movie(movie_name: str, user_id: str) -> str:
+async def search_movie(movie_name: str, user_id=None, search=True) -> str:
 
     request_url = API_MOVIE_DATA_URL.format(movie_name)
 
@@ -84,7 +86,8 @@ async def search_movie(movie_name: str, user_id: str) -> str:
             movie_dict = await resp.json()
 
             if not movie_dict.get("Error"):
-                await create_search(movie_dict["Title"], user_id)
+                if search:
+                    await create_search(movie_dict["Title"], user_id)
                 return format_dict(movie_dict)
             else:
                 return "Not Found :(\nAre you sure you movie name is correct?"
@@ -98,6 +101,12 @@ async def get_movie_data(movie_name: str) -> str:
         async with session.get(request_url) as resp:
             movie_dict = await resp.json()
             return f"{movie_dict['Title']} - {movie_dict['imdbRating']}\n"
+
+
+async def get_random_movie(movie_list: List) -> str:
+    
+    index = random.randint(0, len(movie_list))
+    return await search_movie(movie_list[index], search=False)
 
 
 async def get_suggestions(movie_name: str) -> str:

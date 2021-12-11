@@ -10,7 +10,7 @@ from aiogram.utils.emoji import emojize
 from aiogram.utils.markdown import text
 from decouple import config
 
-from utils.funcs import create_or_get_user, get_suggestions, search_movie, get_user, get_movie_names
+from utils.funcs import create_or_get_user, get_suggestions, search_movie, get_user, get_movie_names, get_random_movie
 from utils.states import SearchState, SuggestState
 from database.decorators import connect_db
 
@@ -98,6 +98,13 @@ async def unsubscribe(message: types.Message):
         reply_text = "You are successfully unsubscribed"
 
     return await message.reply(reply_text)
+
+
+@dp.message_handler(commands=["next"])
+async def next(message: types.Message):
+
+    reply_text = await get_random_movie(MOVIE_LIST)
+    return await message.reply(reply_text, parse_mode=ParseMode.HTML) 
 
 
 @dp.message_handler()
