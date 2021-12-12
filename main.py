@@ -27,6 +27,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 API_TOKEN = config("API_TOKEN")
 MOVIE_LIST = []
+SERIES_LIST = []
 
 
 logging.basicConfig(level=logging.INFO)
@@ -115,6 +116,13 @@ async def next(message: types.Message):
     return await message.reply(reply_text, parse_mode=ParseMode.HTML) 
 
 
+@dp.message_handler(commands=["series"])
+async def series(message: types.Message):
+
+    reply_text = await get_random_movie(SERIES_LIST)
+    return await message.reply(reply_text.replace("Movie", "Series"), parse_mode=ParseMode.HTML)
+
+
 @dp.message_handler()
 async def echo(message: types.Message):
 
@@ -151,7 +159,22 @@ async def process_movie_name(message: types.Message, state: FSMContext):
 @connect_db
 async def daily_suggestion():
     users = await get_subscribed_users_list()
-    movie_data = await get_random_movie(MOVIE_LIST)
+    movie_data = "Suggestion of the day:\n" + await get_random_movie(MOVIE_LIST)
+
+    for user in users:
+        try:
+            await bot.send_message(
+                chat_id=user.tg_id, text=movie_data, parse_mode=ParseMode.HTML
+            )
+        except Exception as e:
+            logging.error("Cannot send message:  %r", e)
+            continue
+
+
+@connect_db
+async def weekly_suggestion():
+    users = await get_subscribed_users_list()
+    movie_data = ("Series of the week:\n" + await get_random_movie(SERIES_LIST)).replace('Movie', "Series")
 
     for user in users:
         try:
@@ -168,8 +191,11 @@ async def daily_suggestion():
 
 async def update_movie_names():
 
-    global MOVIE_LIST   
+    global MOVIE_LIST
+    global SERIES_LIST   
+
     MOVIE_LIST = await get_movie_names()
+    SERIES_LIST = await get_movie_names(series=True)
 
 
 if __name__ == "__main__":
@@ -179,6 +205,7 @@ if __name__ == "__main__":
     scheduler = AsyncIOScheduler({'apscheduler.timezone': 'Europe/London'})
     scheduler.add_job(update_movie_names, 'cron', day='1st mon')
     scheduler.add_job(daily_suggestion, 'cron', hour='17', minute='20')
+    scheduler.add_job(weekly_suggestion, 'cron', hour='8', minute='15', day_of_week ='sun', week='*')
 
     scheduler.start()
     executor.start_polling(dp, skip_updates=True)

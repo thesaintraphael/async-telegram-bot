@@ -115,7 +115,6 @@ async def get_movie_data(movie_name: str) -> str:
 
 
 async def get_random_movie(movie_list: List) -> str:
-    
     index = random.randint(0, len(movie_list))
     return await search_movie(movie_list[index], search=False)
 
@@ -142,9 +141,11 @@ async def get_suggestions(movie_name: str) -> str:
             return suggestions
 
 
-async def get_movie_names() -> List:
-
+async def get_movie_names(series=False) -> List:
+    
     url = 'http://www.imdb.com/chart/top'
+    if series:
+        url += 'tv'
 
     async with ClientSession() as session:
         async with session.get(url) as resp:
@@ -154,5 +155,4 @@ async def get_movie_names() -> List:
             movie_tags = soup.select('td.titleColumn a')
             titles = [tag.text for tag in movie_tags]
             titles = list(set(titles))  # remove duplicates
-
             return titles
