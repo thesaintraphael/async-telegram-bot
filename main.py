@@ -45,7 +45,11 @@ dp = Dispatcher(bot, storage=storage)
 @connect_db
 async def start(message: types.Message):
     user = await create_or_get_user(types.User.get_current())
-    await message.reply(f"Hi, {user.name}")
+    reply_text = (
+        "Hi, {}. Welcome to MovieScrap {}\nType /view to view all possible commands\nVisit our website:"
+        "https://moviescrap.herokuapp.com/".format(user.name, u"\U0001F973")
+    )
+    await message.reply(reply_text)
 
 
 @dp.message_handler(state="*", commands="cancel")
@@ -66,7 +70,7 @@ async def search(message: types.Message):
 
     await SearchState.movie_name.set()
     await message.reply(
-        "Enter the movie name you want to explore.. \n Type cancel to cancel"
+        "Enter the movie name you want to explore..\nType cancel to cancel"
     )
 
 
@@ -79,22 +83,22 @@ async def suggest(message: types.Message):
     )
 
 
-@dp.message_handler(commands=['subscribe'])
+@dp.message_handler(commands=["subscribe"])
 async def subscribe(message: types.Message):
 
     tg_id = types.User.get_current().id
     user = await get_user(tg_id)
     if user.subscribed:
-       reply_text = "You are already subscribed"
+        reply_text = "You are already subscribed"
     else:
         user.subscribed = True
         await user.save()
         reply_text = "You are successfully subscribed"
-    
+
     return await message.reply(reply_text)
 
 
-@dp.message_handler(commands=['unsubscribe'])
+@dp.message_handler(commands=["unsubscribe"])
 async def unsubscribe(message: types.Message):
 
     tg_id = types.User.get_current().id
@@ -113,20 +117,29 @@ async def unsubscribe(message: types.Message):
 async def next(message: types.Message):
 
     reply_text = await get_random_movie(MOVIE_LIST)
-    return await message.reply(reply_text, parse_mode=ParseMode.HTML) 
+    return await message.reply(reply_text, parse_mode=ParseMode.HTML)
 
 
 @dp.message_handler(commands=["series"])
 async def series(message: types.Message):
 
     reply_text = await get_random_movie(SERIES_LIST)
-    return await message.reply(reply_text.replace("Movie", "Series"), parse_mode=ParseMode.HTML)
+    return await message.reply(
+        reply_text.replace("Movie", "Series"), parse_mode=ParseMode.HTML
+    )
+
+
+@dp.message_handler(commands=["view"])
+async def view(message: types.Message):
+
+    reply_text = "/start - Starts the bot\n/view - Views all available commands\n/next - Generate next random movie suggestion\n/series - Generate next random TV show suggestion\n/search - Return the data movie you want to\n/suggest - Suggest couple of movies based on your input\n/subscribe - Subscribe to daily/weekly suggestions\n/unsubscribe - Unsubscribe from daily/weekly suggestions"
+    await message.reply(reply_text)
 
 
 @dp.message_handler()
 async def echo(message: types.Message):
 
-    reply_text = "Sorry,\nI dont understand this command yet :disappointed_relieved:"
+    reply_text = "Sorry,\nI dont understand this command yet :disappointed_relieved:\nType /view to see all possible commands"
     reply_text = emojize(text(reply_text))
     return await bot.send_message(
         message.chat.id, reply_text, parse_mode=ParseMode.MARKDOWN
@@ -174,7 +187,9 @@ async def daily_suggestion():
 @connect_db
 async def weekly_suggestion():
     users = await get_subscribed_users_list()
-    movie_data = ("Series of the week:\n" + await get_random_movie(SERIES_LIST)).replace('Movie', "Series")
+    movie_data = (
+        "Series of the week:\n" + await get_random_movie(SERIES_LIST)
+    ).replace("Movie", "Series")
 
     for user in users:
         try:
@@ -192,7 +207,7 @@ async def weekly_suggestion():
 async def update_movie_names():
 
     global MOVIE_LIST
-    global SERIES_LIST   
+    global SERIES_LIST
 
     MOVIE_LIST = await get_movie_names()
     SERIES_LIST = await get_movie_names(series=True)
@@ -201,11 +216,13 @@ async def update_movie_names():
 if __name__ == "__main__":
 
     asyncio.get_event_loop().run_until_complete(update_movie_names())
-    
-    scheduler = AsyncIOScheduler({'apscheduler.timezone': 'Europe/London'})
-    scheduler.add_job(update_movie_names, 'cron', day='1st mon')
-    scheduler.add_job(daily_suggestion, 'cron', hour='17', minute='20')
-    scheduler.add_job(weekly_suggestion, 'cron', hour='8', minute='15', day_of_week ='sun', week='*')
+
+    scheduler = AsyncIOScheduler({"apscheduler.timezone": "Europe/London"})
+    scheduler.add_job(update_movie_names, "cron", day="1st mon")
+    scheduler.add_job(daily_suggestion, "cron", hour="17", minute="20")
+    scheduler.add_job(
+        weekly_suggestion, "cron", hour="8", minute="15", day_of_week="sun", week="*"
+    )
 
     scheduler.start()
     executor.start_polling(dp, skip_updates=True)
