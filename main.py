@@ -219,9 +219,9 @@ if __name__ == "__main__":
 
     scheduler = AsyncIOScheduler({"apscheduler.timezone": "Europe/London"})
     scheduler.add_job(update_movie_names, "cron", day="1st mon")
-    scheduler.add_job(daily_suggestion, "cron", hour="17", minute="20")
+    scheduler.add_job(daily_suggestion, "cron", hour="10", minute="00")
     scheduler.add_job(
-        weekly_suggestion, "cron", hour="8", minute="15", day_of_week="sun", week="*"
+        weekly_suggestion, "cron", hour="9", minute="00", day_of_week="sun", week="*"
     )
 
     scheduler.start()
