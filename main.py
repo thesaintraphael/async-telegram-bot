@@ -79,7 +79,7 @@ async def suggest(message: types.Message):
 
     await SuggestState.movie_name.set()
     await message.reply(
-        "Enter a movie name to get sugesstions..\nType cancel to cancel"
+        "Enter a movie name to get suggestions..\nType cancel to cancel"
     )
 
 
@@ -114,7 +114,7 @@ async def unsubscribe(message: types.Message):
 
 
 @dp.message_handler(commands=["next"])
-async def next(message: types.Message):
+async def next_movie(message: types.Message):
 
     reply_text = await get_random_movie(MOVIE_LIST)
     return await message.reply(reply_text, parse_mode=ParseMode.HTML)
@@ -132,14 +132,18 @@ async def series(message: types.Message):
 @dp.message_handler(commands=["view"])
 async def view(message: types.Message):
 
-    reply_text = "/start - Starts the bot\n/view - Views all available commands\n/next - Generate next random movie suggestion\n/series - Generate next random TV show suggestion\n/search - Return the data movie you want to\n/suggest - Suggest couple of movies based on your input\n/subscribe - Subscribe to daily/weekly suggestions\n/unsubscribe - Unsubscribe from daily/weekly suggestions"
+    reply_text = "/start - Starts the bot\n/view - Views all available commands\n/next - Generate next random movie " \
+                 "suggestion\n/series - Generate next random TV show suggestion\n/search - Return the data movie you " \
+                 "want to\n/suggest - Suggest couple of movies based on your input\n/subscribe - Subscribe to " \
+                 "daily/weekly suggestions\n/unsubscribe - Unsubscribe from daily/weekly suggestions "
     await message.reply(reply_text)
 
 
 @dp.message_handler()
 async def echo(message: types.Message):
 
-    reply_text = "Sorry,\nI dont understand this command yet :disappointed_relieved:\nType /view to see all possible commands"
+    reply_text = "Sorry,\nI dont understand this command yet :disappointed_relieved:\nType /view to see all possible " \
+                 "commands "
     reply_text = emojize(text(reply_text))
     return await bot.send_message(
         message.chat.id, reply_text, parse_mode=ParseMode.MARKDOWN
