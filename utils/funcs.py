@@ -96,12 +96,12 @@ async def search_movie(movie_name: str, user_id=None, search=True) -> str:
 
             movie_dict = await resp.json()
 
-            if not movie_dict.get("Error"):
+            if movie_dict.get("Title"):
                 if search:
-                    await create_search(movie_dict["Title"], user_id)
+                    await create_search(movie_dict.get("Title"), user_id)
                 return format_dict(movie_dict)
             else:
-                return "Not Found :(\nAre you sure you movie name is correct?"
+                return "Not Found :(\nAre you sure movie name is correct?"
 
 
 async def get_movie_data(movie_name: str) -> str:
@@ -115,9 +115,11 @@ async def get_movie_data(movie_name: str) -> str:
 
 
 async def get_random_movie(movie_list: List) -> str:
-    index = random.randint(0, len(movie_list))
-    return await search_movie(movie_list[index], search=False)
-
+    while True:
+        index = random.randint(0, len(movie_list))
+        result = await search_movie(movie_list[index], search=False)
+        if not "Not Found" in result:
+            return result
 
 async def get_suggestions(movie_name: str) -> str:
 
@@ -136,7 +138,7 @@ async def get_suggestions(movie_name: str) -> str:
 
             if not tasks:
                 suggestions = (
-                    "Not Found :(\nAre you sure you sure movie name is correct?"
+                    "Not Found :(\nAre you sure movie name is correct?"
                 )
             return suggestions
 
