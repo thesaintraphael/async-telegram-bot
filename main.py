@@ -161,11 +161,11 @@ async def process_suggest_movie_name(message: types.Message, state: FSMContext):
     await message.reply(result)
 
 
-@dp.message_handler(state=SearchState.movie_name)
+@dp.message_handler(state=SearchState)
 async def process_movie_name(message: types.Message, state: FSMContext):
 
     user_id = types.User.get_current().id
-    result = await search_movie(message.text, str(user_id))
+    result = await search_movie(message.text, str(user_id), search=False)
     await state.finish()
     await bot.send_message(chat_id=user_id, text=result, parse_mode=ParseMode.HTML)
 
