@@ -27,4 +27,4 @@ class TestUtils(TestCase):
     def test_get_movie_names(self):
         result = self.loop.run_until_complete(get_movie_names())
         self.assertIsInstance(result, list)
-        self.assertEqual(len(result, 250))
+        self.assertEqual(len(result), 250)
