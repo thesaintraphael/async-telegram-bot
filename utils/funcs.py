@@ -116,7 +116,7 @@ async def get_movie_data(movie_name: str) -> str:
 
 async def get_random_movie(movie_list: List) -> str:
     while True:
-        index = random.randint(0, len(movie_list))
+        index = random.randint(0, len(movie_list)-1)
         result = await search_movie(movie_list[index], search=False)
         if not "Not Found" in result:
             return result
