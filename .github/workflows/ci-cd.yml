@@ -15,6 +15,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - run: |
+          git fetch --prune --unshallow
       - name: Set up Python 3.8
         uses: actions/setup-python@v2
         with:
@@ -47,4 +49,5 @@ jobs:
           HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME }}
         if: job.status == 'success'
         run: |
-          git push -f https://heroku:$HEROKU_AUTH_TOKEN@git.heroku.com/$HEROKU_APP_NAME.git main
+          git remote add heroku https://heroku:$HEROKU_AUTH_TOKEN@git.heroku.com/$HEROKU_APP_NAME.git
+          git push heroku HEAD:master -f
