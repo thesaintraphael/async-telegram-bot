@@ -10,8 +10,8 @@ from database.models import Search, User
 from database.decorators import connect_db
 
 
-API_MOVIE_DATA_URL = config("API_MOVIE_DATA_URL")
-MOVIE_MAP_URL = config("MOVIE_MAP_URL")
+API_MOVIE_DATA_URL = "http://www.omdbapi.com/?t={}&apikey=" + config("OMDB_API_KEY")
+MOVIE_MAP_URL = "https://www.movie-map.com/{}"
 
 
 #   CRUD OPERATIONS
@@ -52,7 +52,7 @@ async def get_subscribed_users_list() -> List:
     return await User.filter(subscribed=True)
 
 
-# MOVIE DATA 
+# MOVIE DATA
 
 
 def format_dict(movie_dict: dict) -> str:
@@ -116,10 +116,11 @@ async def get_movie_data(movie_name: str) -> str:
 
 async def get_random_movie(movie_list: List) -> str:
     while True:
-        index = random.randint(0, len(movie_list)-1)
+        index = random.randint(0, len(movie_list) - 1)
         result = await search_movie(movie_list[index], search=False)
         if not "Not Found" in result:
             return result
+
 
 async def get_suggestions(movie_name: str) -> str:
 
@@ -137,24 +138,22 @@ async def get_suggestions(movie_name: str) -> str:
             suggestions = convert_to_str(suggestions)
 
             if not tasks:
-                suggestions = (
-                    "Not Found :(\nAre you sure movie name is correct?"
-                )
+                suggestions = "Not Found :(\nAre you sure movie name is correct?"
             return suggestions
 
 
 async def get_movie_names(series=False) -> List:
-    
-    url = 'http://www.imdb.com/chart/top'
+
+    url = "http://www.imdb.com/chart/top"
     if series:
-        url += 'tv'
+        url += "tv"
 
     async with ClientSession() as session:
         async with session.get(url) as resp:
             resp_text = await resp.text()
-            soup = BeautifulSoup(resp_text, 'html.parser')
+            soup = BeautifulSoup(resp_text, "html.parser")
 
-            movie_tags = soup.select('td.titleColumn a')
+            movie_tags = soup.select("td.titleColumn a")
             titles = [tag.text for tag in movie_tags]
             titles = list(set(titles))  # remove duplicates
             return titles

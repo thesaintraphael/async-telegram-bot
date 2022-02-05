@@ -35,7 +35,7 @@ jobs:
       - name: Test with unittest
         env:
           ADMIN_TELEGRAM_ID: ${{ secrets.ADMIN_TELEGRAM_ID }}
-          API_MOVIE_DATA_URL: ${{ secrets.API_MOVIE_DATA_URL }}
+          OMDB_API_KEY: ${{ secrets.OMDB_API_KEY }}
           API_TOKEN: ${{ secrets.API_TOKEN }}
           DATABASE_TEST_URL: ${{ secrets.DATABASE_TEST_URL }}
           DEBUG: ${{ secrets.DEBUG }}
