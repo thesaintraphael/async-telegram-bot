@@ -12,6 +12,7 @@ from decouple import config
 
 from utils.funcs import (
     create_or_get_user,
+    get_stats,
     get_suggestions,
     search_movie,
     get_user,
@@ -38,6 +39,18 @@ storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
 
 
+# DECORATOR
+
+
+def only_admin(func):
+    async def wrapper(*args, **kwargs):
+        if str(types.User.get_current().id) == config("ADMIN_TELEGRAM_ID"):
+            return await func(*args)
+        return await echo(*args)
+        
+    return wrapper
+
+
 # HANDLE COMMANDS
 
 
@@ -50,6 +63,15 @@ async def start(message: types.Message):
         "https://moviescrap.herokuapp.com/".format(user.name, u"\U0001F973")
     )
     await message.reply(reply_text)
+
+
+@dp.message_handler(commands=["admin"])
+@only_admin
+@connect_db
+async def admin(message: types.Message):
+    stats = await get_stats()
+    return await message.reply(f"Users count: {stats['all_count']}\n"
+                         f"Subscribed users count: {stats['subs_count']}")
 
 
 @dp.message_handler(state="*", commands="cancel")

@@ -37,6 +37,11 @@ async def get_user(tg_id) -> User:
     return await User.filter(tg_id=tg_id).first()
 
 
+async def get_all_users() -> List:
+    
+    return await User.all()
+
+
 async def create_search(name: str, tg_id: str) -> None:
 
     users = await User.filter(tg_id=tg_id)
@@ -50,6 +55,14 @@ async def create_search(name: str, tg_id: str) -> None:
 async def get_subscribed_users_list() -> List:
 
     return await User.filter(subscribed=True)
+
+
+async def get_stats() -> dict:
+    
+    return {
+        "subs_count": len(await get_subscribed_users_list()),
+        "all_count": len(await get_all_users())
+    }
 
 
 # MOVIE DATA
