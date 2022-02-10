@@ -1,7 +1,7 @@
 import asyncio
 import random
 
-from typing import List
+from typing import List, Tuple
 from aiohttp import ClientSession
 from decouple import config
 from bs4 import BeautifulSoup
@@ -42,6 +42,7 @@ async def get_all_users() -> List:
     return await User.all()
 
 
+@connect_db
 async def create_search(name: str, tg_id: str) -> None:
 
     users = await User.filter(tg_id=tg_id)
@@ -57,11 +58,28 @@ async def get_subscribed_users_list() -> List:
     return await User.filter(subscribed=True)
 
 
-async def get_stats() -> dict:
+async def get_most_searched_movie_name() -> Tuple:
+    searches = {}
+    searches_list = await Search.all()
+    for search in searches_list:
+        if search.movie_name not in searches:
+            searches[search.movie_name] = 1
+        else:
+            searches[search.movie_name] += 1
+
+    search_stats = sorted(searches.items(), key=lambda search: search[1], reverse=True)
     
+    return search_stats[0]
+
+
+async def get_stats() -> dict:
+    search_stats = await get_most_searched_movie_name()
+        
     return {
-        "subs_count": len(await get_subscribed_users_list()),
-        "all_count": len(await get_all_users())
+        "subs_count": await User.filter(subscribed=True).count(),
+        "all_count": await User.all().count(),
+        "most_searched": search_stats[0],
+        "searched_times": search_stats[1]
     }
 
 

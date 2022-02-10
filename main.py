@@ -71,7 +71,8 @@ async def start(message: types.Message):
 async def admin(message: types.Message):
     stats = await get_stats()
     return await message.reply(f"Users count: {stats['all_count']}\n"
-                         f"Subscribed users count: {stats['subs_count']}")
+                         f"Subscribed users count: {stats['subs_count']}\n"
+                         f"Most searched movie name: {stats['most_searched']} ({stats['searched_times']} times)" )
 
 
 @dp.message_handler(state="*", commands="cancel")
@@ -187,7 +188,7 @@ async def process_suggest_movie_name(message: types.Message, state: FSMContext):
 async def process_movie_name(message: types.Message, state: FSMContext):
 
     user_id = types.User.get_current().id
-    result = await search_movie(message.text, str(user_id), search=False)
+    result = await search_movie(message.text, str(user_id), search=True)
     await state.finish()
     await bot.send_message(chat_id=user_id, text=result, parse_mode=ParseMode.HTML)
 
