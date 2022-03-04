@@ -47,7 +47,7 @@ def only_admin(func):
         if str(types.User.get_current().id) == config("ADMIN_TELEGRAM_ID"):
             return await func(*args)
         return await echo(*args)
-        
+
     return wrapper
 
 
@@ -60,7 +60,7 @@ async def start(message: types.Message):
     user = await create_or_get_user(types.User.get_current())
     reply_text = (
         "Hi, {}. Welcome to MovieScrap {}\nType /view to view all possible commands\nVisit our website:"
-        "https://moviescrap.herokuapp.com/".format(user.name, u"\U0001F973")
+        "https://moviescrap.herokuapp.com/".format(user.name, "\U0001F973")
     )
     await message.reply(reply_text)
 
@@ -70,9 +70,11 @@ async def start(message: types.Message):
 @connect_db
 async def admin(message: types.Message):
     stats = await get_stats()
-    return await message.reply(f"Users count: {stats['all_count']}\n"
-                         f"Subscribed users count: {stats['subs_count']}\n"
-                         f"Most searched movie name: {stats['most_searched']} ({stats['searched_times']} times)" )
+    return await message.reply(
+        f"Users count: {stats['all_count']}\n"
+        f"Subscribed users count: {stats['subs_count']}\n"
+        f"Most searched movie name: {stats['most_searched']} ({stats['searched_times']} times)"
+    )
 
 
 @dp.message_handler(state="*", commands="cancel")
@@ -155,18 +157,22 @@ async def series(message: types.Message):
 @dp.message_handler(commands=["view"])
 async def view(message: types.Message):
 
-    reply_text = "/start - Starts the bot\n/view - Views all available commands\n/next - Generate next random movie " \
-                 "suggestion\n/series - Generate next random TV show suggestion\n/search - Return the data movie you " \
-                 "want to\n/suggest - Suggest couple of movies based on your input\n/subscribe - Subscribe to " \
-                 "daily/weekly suggestions\n/unsubscribe - Unsubscribe from daily/weekly suggestions "
+    reply_text = (
+        "/start - Starts the bot\n/view - Views all available commands\n/next - Generate next random movie "
+        "suggestion\n/series - Generate next random TV show suggestion\n/search - Return the data movie you "
+        "want to\n/suggest - Suggest couple of movies based on your input\n/subscribe - Subscribe to "
+        "daily/weekly suggestions\n/unsubscribe - Unsubscribe from daily/weekly suggestions "
+    )
     await message.reply(reply_text)
 
 
 @dp.message_handler()
 async def echo(message: types.Message):
 
-    reply_text = "Sorry,\nI dont understand this command yet :disappointed_relieved:\nType /view to see all possible " \
-                 "commands "
+    reply_text = (
+        "Sorry,\nI dont understand this command yet :disappointed_relieved:\nType /view to see all possible "
+        "commands "
+    )
     reply_text = emojize(text(reply_text))
     return await bot.send_message(
         message.chat.id, reply_text, parse_mode=ParseMode.MARKDOWN
