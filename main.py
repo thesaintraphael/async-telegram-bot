@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import backoff
 
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.types import ParseMode
@@ -237,6 +238,7 @@ async def weekly_suggestion():
 #  INTERNAL COMMANDS
 
 
+@backoff.on_exception(backoff.expo, Exception, max_tries=2)
 async def update_movie_names():
 
     global MOVIE_LIST
