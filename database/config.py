@@ -2,11 +2,7 @@ from decouple import config
 
 
 DEBUG = config("DEBUG")
-if DEBUG:
-    DATABASE_URL = config("DATABASE_TEST_URL")
-else:
-    DATABASE_URL = config("DATABASE_URL")
-
+DATABASE_URL = config("DATABASE_TEST_URL") if DEBUG else config("DATABASE_URL")
 TORTOISE_ORM = {
     "connections": {"default": DATABASE_URL},
     "apps": {
