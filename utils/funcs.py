@@ -10,7 +10,8 @@ from database.models import Search, User
 from database.decorators import connect_db
 
 
-API_MOVIE_DATA_URL = "http://www.omdbapi.com/?t={}&apikey=" + config("OMDB_API_KEY")
+API_MOVIE_DATA_URL = "http://www.omdbapi.com/?t={}&apikey=" + \
+    config("OMDB_API_KEY")
 MOVIE_MAP_URL = "https://www.movie-map.com/{}"
 
 
@@ -38,7 +39,7 @@ async def get_user(tg_id) -> User:
 
 
 async def get_all_users() -> List:
-    
+
     return await User.all()
 
 
@@ -67,14 +68,15 @@ async def get_most_searched_movie_name() -> Tuple:
         else:
             searches[search.movie_name] += 1
 
-    search_stats = sorted(searches.items(), key=lambda search: search[1], reverse=True)
-    
+    search_stats = sorted(
+        searches.items(), key=lambda search: search[1], reverse=True)
+
     return search_stats[0]
 
 
 async def get_stats() -> dict:
     search_stats = await get_most_searched_movie_name()
-        
+
     return {
         "subs_count": await User.filter(subscribed=True).count(),
         "all_count": await User.all().count(),
@@ -157,7 +159,8 @@ async def get_suggestions(movie_name: str) -> str:
             soup = BeautifulSoup(html_text, "html.parser")
             a_links = soup.find_all("a")
 
-            tasks = [asyncio.create_task(get_movie_data(link.text)) for link in a_links[3:13]]
+            tasks = [asyncio.create_task(get_movie_data(link.text))
+                     for link in a_links[3:13]]
 
             suggestions = await asyncio.gather(*tasks)
             suggestions = convert_to_str(suggestions)
@@ -180,5 +183,4 @@ async def get_movie_names(series=False) -> List:
 
             movie_tags = soup.select("td.titleColumn a")
             titles = [tag.text for tag in movie_tags]
-            titles = list(set(titles))  # remove duplicates
-            return titles
+            return list(set(titles))  # returning list without duplicates
