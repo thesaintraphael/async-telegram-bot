@@ -162,8 +162,7 @@ async def get_suggestions(movie_name: str) -> str:
             tasks = [asyncio.create_task(get_movie_data(link.text))
                      for link in a_links[3:13]]
 
-            suggestions = await asyncio.gather(*tasks)
-            suggestions = convert_to_str(suggestions)
+            suggestions = convert_to_str(await asyncio.gather(*tasks))
 
             if not tasks:
                 suggestions = "Not Found :(\nAre you sure movie name is correct?"
