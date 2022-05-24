@@ -111,11 +111,7 @@ def format_dict(movie_dict: dict) -> str:
 
 def convert_to_str(suggestions: List[str]) -> str:
 
-    suggestions_str = ""
-    for suggestion in suggestions:
-        suggestions_str += suggestion
-
-    return suggestions_str
+    return "".join(suggestions)
 
 
 async def search_movie(movie_name: str, user_id=None, search=True) -> str:
@@ -149,7 +145,7 @@ async def get_random_movie(movie_list: List) -> str:
     while True:
         index = random.randint(0, len(movie_list) - 1)
         result = await search_movie(movie_list[index], search=False)
-        if not "Not Found" in result:
+        if "Not Found" not in result:
             return result
 
 
@@ -159,11 +155,9 @@ async def get_suggestions(movie_name: str) -> str:
         async with session.get(MOVIE_MAP_URL.format(movie_name)) as response:
             html_text = await response.text()
             soup = BeautifulSoup(html_text, "html.parser")
-            tasks = []
             a_links = soup.find_all("a")
 
-            for link in a_links[3:13]:
-                tasks.append(asyncio.create_task(get_movie_data(link.text)))
+            tasks = [asyncio.create_task(get_movie_data(link.text)) for link in a_links[3:13]]
 
             suggestions = await asyncio.gather(*tasks)
             suggestions = convert_to_str(suggestions)
