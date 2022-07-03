@@ -50,7 +50,7 @@ jobs:
           DATABASE_TEST_URL: ${{ secrets.DATABASE_TEST_URL }}
           DEBUG: ${{ secrets.DEBUG }}
           MOVIE_MAP_URL: ${{ secrets.MOVIE_MAP_URL }}
-        run: /
+        run: |
           pytest
       - name: Deploy to Heroku
         env:
