@@ -90,23 +90,11 @@ async def get_stats() -> dict:
 
 def format_dict(movie_dict: dict) -> str:
 
-    message = (
-        "Movie: {}"
-        "\nReleased on: {}\nIMDb Rating: {}\nRuntime: "
-        "{}\n".format(
-            movie_dict["Title"],
-            movie_dict["Released"],
-            movie_dict["imdbRating"],
-            movie_dict["Runtime"],
-        )
-    )
-    message += "Director: {}\nGenre: {}\nActors: " "{}\n".format(
-        movie_dict["Director"], movie_dict["Genre"], movie_dict["Actors"]
-    )
-    message += (
-        "<a href='{}'>Poster: </a>\nView trailer <a href='https://www.imdb.com/title/{}/'>here</a>"
-        "".format(movie_dict["Poster"], movie_dict["imdbID"])
-    )
+    message = f'Movie: {movie_dict["Title"]}\nReleased on: {movie_dict["Released"]}\nIMDb Rating: {movie_dict["imdbRating"]}\nRuntime: {movie_dict["Runtime"]}\n'
+
+    message += f'Director: {movie_dict["Director"]}\nGenre: {movie_dict["Genre"]}\nActors: {movie_dict["Actors"]}\n'
+
+    message += f"""<a href='{movie_dict["Poster"]}'>Poster: </a>\nView trailer <a href='https://www.imdb.com/title/{movie_dict["imdbID"]}/'>here</a>"""
 
     return message
 

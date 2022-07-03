@@ -22,6 +22,7 @@ from utils.funcs import (
     get_subscribed_users_list,
 )
 from utils.states import SearchState, SuggestState
+from utils.decorators import only_admin
 from database.decorators import connect_db
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -40,18 +41,6 @@ storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
 
 
-# DECORATOR
-
-
-def only_admin(func):
-    async def wrapper(*args, **kwargs):
-        if str(types.User.get_current().id) == config("ADMIN_TELEGRAM_ID"):
-            return await func(*args)
-        return await echo(*args)
-
-    return wrapper
-
-
 # HANDLE COMMANDS
 
 
@@ -59,6 +48,7 @@ def only_admin(func):
 @connect_db
 async def start(message: types.Message):
     user = await create_or_get_user(types.User.get_current())
+
     reply_text = (
         "Hi, {}. Welcome to MovieScrap {}\nType /view to view all possible commands\nVisit our website:"
         "https://moviescrap.herokuapp.com/".format(user.name, "\U0001F973")
