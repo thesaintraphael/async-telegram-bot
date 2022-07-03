@@ -36,5 +36,17 @@ Run:
 py main.py
 ```
 
+
+## Run Tests
+
+```
+Tests with unittest:
+python -m unittest discover tests
+
+Tests with pytest:
+pytest
+
+```
+
 ## View Bot Here 
 [MovieScrap](https://t.me/moviescrapbot)
