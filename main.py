@@ -9,7 +9,6 @@ from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 from aiogram.utils.emoji import emojize
 from aiogram.utils.markdown import text
-from decouple import config
 
 from utils.funcs import (
     create_or_get_user,
@@ -28,7 +27,9 @@ from database.decorators import connect_db
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 
-API_TOKEN = config("API_TOKEN")
+from env import get_env_variable
+
+API_TOKEN = get_env_variable("API_TOKEN")
 MOVIE_LIST = []
 SERIES_LIST = []
 
