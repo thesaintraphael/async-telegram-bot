@@ -3,14 +3,16 @@ import random
 from typing import List
 
 
-from decouple import config
 from bs4 import BeautifulSoup
 from aiohttp import ClientSession
 
 
+from env import get_env_variable
+
+
 MOVIE_MAP_URL = "https://www.movie-map.com/{}"
 API_MOVIE_DATA_URL = "http://www.omdbapi.com/?t={}&apikey=" + \
-    config("OMDB_API_KEY")
+    get_env_variable("OMDB_API_KEY")
 
 
 class StrConverter:

@@ -1,8 +1,9 @@
-from decouple import config
+from env import get_env_variable
 
 
-DEBUG = config("DEBUG")
-DATABASE_URL = config("DATABASE_TEST_URL") if DEBUG else config("DATABASE_URL")
+DEBUG = get_env_variable("DEBUG")
+DATABASE_URL = get_env_variable(
+    "DATABASE_TEST_URL") if DEBUG else get_env_variable("DATABASE_URL")
 TORTOISE_ORM = {
     "connections": {"default": DATABASE_URL},
     "apps": {

@@ -1,13 +1,13 @@
 
 import functools
 from aiogram import types
-from decouple import config
+from env import get_env_variable
 
 
 def only_admin(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        if str(types.User.get_current().id) == config("ADMIN_TELEGRAM_ID"):
+        if str(types.User.get_current().id) == get_env_variable("ADMIN_TELEGRAM_ID"):
             return func(*args, **kwargs)
 
         from main import echo
