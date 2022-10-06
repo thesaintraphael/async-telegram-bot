@@ -10,26 +10,16 @@ from aiogram.dispatcher import FSMContext
 from aiogram.utils.emoji import emojize
 from aiogram.utils.markdown import text
 
-from utils.funcs import (
-    create_or_get_user,
-    get_stats,
-    get_suggestions,
-    search_movie,
-    get_user,
-    get_movie_names,
-    get_random_movie,
-    get_subscribed_users_list,
-)
-from utils.states import SearchState, SuggestState
 from utils.decorators import only_admin
 from database.decorators import connect_db
+from utils.states import SearchState, SuggestState
+from utils import UserUtil, MovieListUtil, MovieScrapper, Statistics
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 
 from env import get_env_variable
 
-API_TOKEN = get_env_variable("API_TOKEN")
 MOVIE_LIST = []
 SERIES_LIST = []
 
@@ -37,7 +27,7 @@ SERIES_LIST = []
 logging.basicConfig(level=logging.INFO)
 
 
-bot = Bot(token=API_TOKEN)
+bot = Bot(token=get_env_variable("API_TOKEN"))
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
 
@@ -48,8 +38,10 @@ dp = Dispatcher(bot, storage=storage)
 @dp.message_handler(commands=["start"])
 @connect_db
 async def start(message: types.Message):
-    user = await create_or_get_user(types.User.get_current())
 
+    print(await MovieListUtil.get_movies_list())
+
+    user = await UserUtil.create_or_get_user(types.User.get_current())
     reply_text = (
         "Hi, {}. Welcome to MovieScrap {}\nType /view to view all possible commands\nVisit our website:"
         "https://moviescrap.herokuapp.com/".format(user.name, "\U0001F973")
@@ -61,7 +53,7 @@ async def start(message: types.Message):
 @only_admin
 @connect_db
 async def admin(message: types.Message):
-    stats = await get_stats()
+    stats = await Statistics.get_stats()
     return await message.reply(
         f"Users count: {stats['all_count']}\n"
         f"Subscribed users count: {stats['subs_count']}\n"
@@ -104,7 +96,7 @@ async def suggest(message: types.Message):
 async def subscribe(message: types.Message):
 
     tg_id = types.User.get_current().id
-    user = await get_user(tg_id)
+    user = await UserUtil.get_user(tg_id)
     if user.subscribed:
         reply_text = "You are already subscribed"
     else:
@@ -119,7 +111,7 @@ async def subscribe(message: types.Message):
 async def unsubscribe(message: types.Message):
 
     tg_id = types.User.get_current().id
-    user = await get_user(tg_id)
+    user = await UserUtil.get_user(tg_id)
     if not user.subscribed:
         reply_text = "You are not subscribed currently"
     else:
@@ -133,14 +125,14 @@ async def unsubscribe(message: types.Message):
 @dp.message_handler(commands=["next"])
 async def next_movie(message: types.Message):
 
-    reply_text = await get_random_movie(MOVIE_LIST)
+    reply_text = await MovieScrapper.get_random_movie(MOVIE_LIST)
     return await message.reply(reply_text, parse_mode=ParseMode.HTML)
 
 
 @dp.message_handler(commands=["series"])
 async def series(message: types.Message):
 
-    reply_text = await get_random_movie(SERIES_LIST)
+    reply_text = await MovieScrapper.get_random_movie(SERIES_LIST)
     return await message.reply(
         reply_text.replace("Movie", "Series"), parse_mode=ParseMode.HTML
     )
@@ -177,7 +169,7 @@ async def echo(message: types.Message):
 @dp.message_handler(state=SuggestState)
 async def process_suggest_movie_name(message: types.Message, state: FSMContext):
 
-    result = await get_suggestions(message.text)
+    result = await MovieScrapper(message.text).get_suggestions
     await state.finish()
     await message.reply(result)
 
@@ -186,7 +178,7 @@ async def process_suggest_movie_name(message: types.Message, state: FSMContext):
 async def process_movie_name(message: types.Message, state: FSMContext):
 
     user_id = types.User.get_current().id
-    result = await search_movie(message.text,)
+    result = await MovieScrapper(message.text).search_movie()
     await state.finish()
     await bot.send_message(chat_id=user_id, text=result, parse_mode=ParseMode.HTML)
 
@@ -196,9 +188,8 @@ async def process_movie_name(message: types.Message, state: FSMContext):
 
 @connect_db
 async def daily_suggestion():
-    users = await get_subscribed_users_list()
-    movie_data = "Suggestion of the day:\n" + await get_random_movie(MOVIE_LIST)
-
+    users = await UserUtil.get_subscribed_user_list()
+    movie_data = "Suggestion of the day:\n" + await MovieScrapper.get_random_movie(MOVIE_LIST)
     for user in users:
         try:
             await bot.send_message(
@@ -211,9 +202,9 @@ async def daily_suggestion():
 
 @connect_db
 async def weekly_suggestion():
-    users = await get_subscribed_users_list()
+    users = await UserUtil.get_subscribed_user_list()
     movie_data = (
-        "Series of the week:\n" + await get_random_movie(SERIES_LIST)
+        "Series of the week:\n" + await MovieScrapper.get_random_movie(SERIES_LIST)
     ).replace("Movie", "Series")
 
     for user in users:
@@ -235,8 +226,8 @@ async def update_movie_names():
     global MOVIE_LIST
     global SERIES_LIST
 
-    MOVIE_LIST = await get_movie_names()
-    SERIES_LIST = await get_movie_names(series=True)
+    MOVIE_LIST = await MovieListUtil.get_movies_list()
+    SERIES_LIST = await MovieListUtil.get_series_list()
 
 
 if __name__ == "__main__":
