@@ -5,6 +5,5 @@ class SearchState(StatesGroup):
     movie_name = State()
 
 
-# creating another state due to Handlers
-class SuggestState(StatesGroup):
+class SuggestState(SearchState):
     movie_name = State()
