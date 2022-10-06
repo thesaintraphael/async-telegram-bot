@@ -39,8 +39,6 @@ dp = Dispatcher(bot, storage=storage)
 @connect_db
 async def start(message: types.Message):
 
-    print(await MovieListUtil.get_movies_list())
-
     user = await UserUtil.create_or_get_user(types.User.get_current())
     reply_text = (
         "Hi, {}. Welcome to MovieScrap {}\nType /view to view all possible commands\nVisit our website:"
