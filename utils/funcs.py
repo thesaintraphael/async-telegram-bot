@@ -1,18 +1,19 @@
 import asyncio
 import random
 
-from typing import List, Tuple
-from aiohttp import ClientSession
 from decouple import config
 from bs4 import BeautifulSoup
+from typing import List, Tuple
+from aiohttp import ClientSession
 
 from database.models import Search, User
 from database.decorators import connect_db
 
 
+IMDB_URL = "http://www.imdb.com/chart/top"
+MOVIE_MAP_URL = "https://www.movie-map.com/{}"
 API_MOVIE_DATA_URL = "http://www.omdbapi.com/?t={}&apikey=" + \
     config("OMDB_API_KEY")
-MOVIE_MAP_URL = "https://www.movie-map.com/{}"
 
 
 #   CRUD OPERATIONS
@@ -36,22 +37,6 @@ async def create_or_get_user(user) -> User:
 async def get_user(tg_id) -> User:
 
     return await User.filter(tg_id=tg_id).first()
-
-
-async def get_all_users() -> List:
-
-    return await User.all()
-
-
-@connect_db
-async def create_search(name: str, tg_id: str) -> None:
-
-    users = await User.filter(tg_id=tg_id)
-    if users:
-        user = users[0]
-        await Search.create(movie_name=name, user=user)
-
-    return
 
 
 async def get_subscribed_users_list() -> List:
@@ -88,35 +73,28 @@ async def get_stats() -> dict:
 # MOVIE DATA
 
 
-def format_dict(movie_dict: dict) -> str:
+def movie_dict_to_str(movie_dict: dict) -> str:
+    return (
+        f'Movie: {movie_dict["Title"]}\nReleased on: {movie_dict["Released"]}\nIMDb Rating: {movie_dict["imdbRating"]}\nRuntime: {movie_dict["Runtime"]}\n'
+        f'Director: {movie_dict["Director"]}\nGenre: {movie_dict["Genre"]}\nActors: {movie_dict["Actors"]}\n'
+        f"""<a href='{movie_dict["Poster"]}'>Poster: </a>\nView trailer <a href='https://www.imdb.com/title/{movie_dict["imdbID"]}/'>here</a>"""
 
-    message = f'Movie: {movie_dict["Title"]}\nReleased on: {movie_dict["Released"]}\nIMDb Rating: {movie_dict["imdbRating"]}\nRuntime: {movie_dict["Runtime"]}\n'
-
-    message += f'Director: {movie_dict["Director"]}\nGenre: {movie_dict["Genre"]}\nActors: {movie_dict["Actors"]}\n'
-
-    message += f"""<a href='{movie_dict["Poster"]}'>Poster: </a>\nView trailer <a href='https://www.imdb.com/title/{movie_dict["imdbID"]}/'>here</a>"""
-
-    return message
+    )
 
 
-def convert_to_str(suggestions: List[str]) -> str:
-
+def list_to_str(suggestions: List[str]) -> str:
     return "".join(suggestions)
 
 
-async def search_movie(movie_name: str, user_id=None, search=True) -> str:
+async def search_movie(movie_name: str) -> str:
 
     request_url = API_MOVIE_DATA_URL.format(movie_name)
 
     async with ClientSession() as session:
         async with session.get(request_url) as resp:
-
             movie_dict = await resp.json()
-
             if movie_dict.get("Title"):
-                if search:
-                    await create_search(movie_dict.get("Title"), user_id)
-                return format_dict(movie_dict)
+                return movie_dict_to_str(movie_dict)
             else:
                 return "Not Found :(\nAre you sure movie name is correct?"
 
@@ -134,8 +112,8 @@ async def get_movie_data(movie_name: str) -> str:
 async def get_random_movie(movie_list: List) -> str:
     while True:
         index = random.randint(0, len(movie_list) - 1)
-        result = await search_movie(movie_list[index], search=False)
-        if "Not Found" not in result:
+        result = await search_movie(movie_list[index])
+        if "Not found" not in result:
             return result
 
 
@@ -150,18 +128,16 @@ async def get_suggestions(movie_name: str) -> str:
             tasks = [asyncio.create_task(get_movie_data(link.text))
                      for link in a_links[3:13]]
 
-            suggestions = convert_to_str(await asyncio.gather(*tasks))
+            suggestions = list_to_str(await asyncio.gather(*tasks))
 
             if not tasks:
                 suggestions = "Not Found :(\nAre you sure movie name is correct?"
             return suggestions
 
 
-async def get_movie_names(series=False) -> List:
+async def get_movie_names(series: bool = False) -> List:
 
-    url = "http://www.imdb.com/chart/top"
-    if series:
-        url += "tv"
+    url = f"{IMDB_URL}/tv" if series else IMDB_URL
 
     async with ClientSession() as session:
         async with session.get(url) as resp:
@@ -170,4 +146,4 @@ async def get_movie_names(series=False) -> List:
 
             movie_tags = soup.select("td.titleColumn a")
             titles = [tag.text for tag in movie_tags]
-            return list(set(titles))  # returning list without duplicates
+            return list(set(titles))

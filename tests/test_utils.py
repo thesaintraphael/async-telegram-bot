@@ -10,7 +10,7 @@ class TestUtils(TestCase):
         self.movie_list = ["The Prestige", "Metro", "Some random text"]
 
     def get_search_result(self, movie_name):
-        return self.loop.run_until_complete(search_movie(movie_name, search=False))
+        return self.loop.run_until_complete(search_movie(movie_name))
 
     def test_search_movie_found(self):
         result = self.get_search_result("Dark")
