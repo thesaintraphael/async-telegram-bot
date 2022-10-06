@@ -22,7 +22,7 @@ class TestUtils(TestCase):
 
     def test_get_random_movie(self):
         result = self.loop.run_until_complete(
-            MovieScrapper.get_random_movie(self.movie_list[:3]))
+            MovieScrapper.get_random_movie(self.movie_list[:2]))
         self.assertTrue("Movie" in result)
 
     def test_get_movie_names(self):
